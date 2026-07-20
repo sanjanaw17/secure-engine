@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+
+  frontend:
+    image: nginx:alpine
+    container_name: feedback-frontend
+
+    ports:
+      - "8080:80"
+
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+
+    depends_on:
+      - backend
+
+    restart: always
+
+
+  backend:
+    build: ./backend
+    container_name: feedback-backend
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: student_feedback
+
+    depends_on:
+      - mysql
+
+    restart: always
+
+
+  mysql:
+    image: mysql:8.0
+    container_name: feedback-mysql
+
+    ports:
+      - "3306:3306"
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: student_feedback
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+    restart: always
+
+
+volumes:
+  mysql_data:

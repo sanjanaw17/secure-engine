@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Feedback Portal</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+    background:#f4f6f9;
+}
+
+header{
+    background:#2563eb;
+    color:white;
+    text-align:center;
+    padding:20px;
+}
+
+.container{
+    width:90%;
+    max-width:1100px;
+    margin:30px auto;
+}
+
+.wrapper{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.15);
+}
+
+h2{
+    color:#2563eb;
+    margin-bottom:20px;
+}
+
+label{
+    display:block;
+    margin-top:15px;
+    margin-bottom:5px;
+    font-weight:bold;
+}
+
+input,
+select,
+textarea{
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:15px;
+}
+
+textarea{
+    height:120px;
+    resize:none;
+}
+
+button{
+    width:100%;
+    margin-top:20px;
+    padding:12px;
+    border:none;
+    background:#2563eb;
+    color:white;
+    font-size:16px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+.feedback{
+    padding:15px 0;
+    border-bottom:1px solid #ddd;
+}
+
+.feedback:last-child{
+    border:none;
+}
+
+.feedback h3{
+    color:#333;
+}
+
+.course{
+    color:#2563eb;
+    font-weight:bold;
+}
+
+.rating{
+    color:orange;
+    margin:6px 0;
+    font-size:18px;
+}
+
+.time{
+    color:gray;
+    font-size:13px;
+    margin-top:5px;
+}
+
+footer{
+    margin-top:30px;
+    background:#222;
+    color:white;
+    text-align:center;
+    padding:15px;
+}
+
+@media(max-width:800px){
+.wrapper{
+    grid-template-columns:1fr;
+}
+}
+</style>
+
+</head>
+<body>
+
+<header>
+    <h1>Student Feedback Portal</h1>
+    <p>Share your learning experience</p>
+</header>
+
+<div class="container">
+
+<div class="wrapper">
+
+<!-- Left Card -->
+
+<div class="card">
+
+<h2>Submit Feedback</h2>
+
+<form id="feedbackForm">
+
+<label>Student Name</label>
+<input
+type="text"
+id="name"
+placeholder="Enter your name"
+required
+>
+
+<label>Email</label>
+<input
+type="email"
+id="email"
+placeholder="Enter your email"
+required
+>
+
+<label>Course</label>
+<select id="course">
+
+<option>DevSecOps</option>
+<option>Cloud Computing</option>
+<option>Cyber Security</option>
+<option>Networking</option>
+
+</select>
+
+<label>Rating</label>
+
+<select id="rating">
+
+<option>★★★★★</option>
+<option>★★★★☆</option>
+<option>★★★☆☆</option>
+<option>★★☆☆☆</option>
+<option>★☆☆☆☆</option>
+
+</select>
+
+<label>Feedback</label>
+
+<textarea
+id="feedback"
+placeholder="Write your feedback..."
+required
+></textarea>
+
+<button type="submit">
+Submit Feedback
+</button>
+
+</form>
+
+</div>
+
+<!-- Right Card -->
+
+<div class="card">
+
+<h2>Previous Student Feedback</h2>
+
+<div id="feedbackList">
+
+<p>Loading feedback...</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+
+© 2026 Student Feedback Portal
+
+</footer>
+
+<script>
+
+const API="http://192.168.80.137:5000";
+
+async function loadFeedback(){
+
+    try{
+
+        const response=await fetch(API+"/feedback");
+
+        const data=await response.json();
+
+        const container=document.getElementById("feedbackList");
+
+        container.innerHTML="";
+
+        if(data.length===0){
+
+            container.innerHTML="<p>No feedback available.</p>";
+            return;
+
+        }
+
+        data.forEach(item=>{
+
+            container.innerHTML+=`
+
+            <div class="feedback">
+
+                <h3>${item.name}</h3>
+
+                <p class="course">${item.course}</p>
+
+                <p class="rating">${item.rating}</p>
+
+                <p>${item.feedback}</p>
+
+                <p class="time">${item.created_at}</p>
+
+            </div>
+
+            `;
+
+        });
+
+    }
+
+    catch(error){
+
+        console.log(error);
+
+        document.getElementById("feedbackList").innerHTML=
+        "<p>Cannot connect to backend.</p>";
+
+    }
+
+}
+
+document.getElementById("feedbackForm").addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const feedbackData={
+
+name:document.getElementById("name").value,
+
+email:document.getElementById("email").value,
+
+course:document.getElementById("course").value,
+
+rating:document.getElementById("rating").value,
+
+feedback:document.getElementById("feedback").value
+
+};
+
+try{
+
+const response=await fetch(API+"/feedback",{
+
+method:"POST",
+
+headers:{
+
+"Content-Type":"application/json"
+
+},
+
+body:JSON.stringify(feedbackData)
+
+});
+
+if(response.ok){
+
+alert("Feedback Submitted Successfully!");
+
+document.getElementById("feedbackForm").reset();
+
+loadFeedback();
+
+}
+
+else{
+
+alert("Failed to submit feedback.");
+
+}
+
+}
+
+catch(error){
+
+console.log(error);
+
+alert("Backend is not running.");
+
+}
+
+});
+
+loadFeedback();
+
+</script>
+
+</body>
+</html>
