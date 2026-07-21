@@ -7,7 +7,7 @@ services:
     container_name: feedback-frontend
 
     ports:
-      - "8080:80"
+      - "8000:80"
 
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
