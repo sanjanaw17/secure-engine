@@ -13,6 +13,17 @@ pipeline {
             }
         }
 
+	stage('Gitleaks Scan') {
+    steps {
+        sh '''
+        docker run --rm \
+          -v "$WORKSPACE":/repo \
+          zricethezav/gitleaks:latest \
+          detect \
+          --source=/repo
+        '''
+    }
+}
         stage('Build Docker Images') {
             steps {
                 sh "docker build -t student-feedback-backend:${IMAGE_TAG} ./backend"
