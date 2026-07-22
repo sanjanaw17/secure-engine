@@ -36,6 +36,29 @@ stage('Gitleaks Scan') {
     }
 }
 
+
+stage('Semgrep Scan') {
+    steps {
+        sh '''
+        mkdir -p reports
+
+        docker run --rm \
+          -v "$WORKSPACE":/src \
+          -v "$WORKSPACE/reports":/reports \
+          semgrep/semgrep \
+          semgrep \
+          --config=auto \
+          --json \
+          --output=/reports/semgrep-report.json \
+          /src
+        '''
+
+        archiveArtifacts artifacts: 'reports/semgrep-report.json', fingerprint: true
+    }
+}
+
+
+
         stage('Build Docker Images') {
             steps {
                 sh "docker build -t student-feedback-backend:${IMAGE_TAG} ./backend"
