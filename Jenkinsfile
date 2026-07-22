@@ -16,12 +16,18 @@ pipeline {
 	stage('Gitleaks Scan') {
     steps {
         sh '''
+        mkdir -p reports
+
         docker run --rm \
           -v "$WORKSPACE":/repo \
+          -v "$WORKSPACE/reports":/reports \
           zricethezav/gitleaks:latest \
           detect \
-          --source=/repo
+          --source=/repo \
+          --report-format=json \
+          --report-path=/reports/gitleaks-report.json
         '''
+	archiveArtifacts artifacts: 'reports/gitleaks-report.json', fingerprint: true	
     }
 }
         stage('Build Docker Images') {
