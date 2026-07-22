@@ -13,7 +13,8 @@ pipeline {
             }
         }
 
-	stage('Gitleaks Scan') {
+
+stage('Gitleaks Scan') {
     steps {
         sh '''
         mkdir -p reports
@@ -23,13 +24,17 @@ pipeline {
           -v "$WORKSPACE/reports":/reports \
           zricethezav/gitleaks:latest \
           detect \
+          --no-git \
           --source=/repo \
           --report-format=json \
           --report-path=/reports/gitleaks-report.json
         '''
-	archiveArtifacts artifacts: 'reports/gitleaks-report.json', fingerprint: true	
+
+        archiveArtifacts artifacts: 'reports/gitleaks-report.json', fingerprint: true
     }
 }
+
+
         stage('Build Docker Images') {
             steps {
                 sh "docker build -t student-feedback-backend:${IMAGE_TAG} ./backend"
