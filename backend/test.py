@@ -1,4 +1,3 @@
-import subprocess
-
-name = input("Command: ")
-subprocess.call(name, shell=True)
+name = input ("hie")
+result = eval(name)
+print(result)
