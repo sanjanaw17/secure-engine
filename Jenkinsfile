@@ -26,6 +26,8 @@ stage('Gitleaks Scan') {
           detect \
           --no-git \
           --source=/repo \
+          --exit-code 1 \
+          --verbose \
           --report-format=json \
           --report-path=/reports/gitleaks-report.json
         '''
@@ -33,7 +35,6 @@ stage('Gitleaks Scan') {
         archiveArtifacts artifacts: 'reports/gitleaks-report.json', fingerprint: true
     }
 }
-
 
         stage('Build Docker Images') {
             steps {
