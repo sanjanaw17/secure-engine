@@ -48,6 +48,7 @@ stage('Semgrep Scan') {
           semgrep/semgrep \
           semgrep \
           --config=auto \
+          --error \
           --json \
           --output=/reports/semgrep-report.json \
           /src
