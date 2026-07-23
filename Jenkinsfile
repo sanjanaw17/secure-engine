@@ -7,65 +7,62 @@ pipeline {
 
     stages {
 
+        stage('Clean Reports') {
+            steps {
+                sh '''
+                rm -rf reports
+                '''
+            }
+        }
 
-		stage('Clean Reports') {
-    steps {
-        sh '''
-        rm -rf reports
-        '''
-    }
-}
-		
         stage('Checkout Code') {
             steps {
                 checkout scm
             }
         }
 
+        stage('Gitleaks Scan') {
+            steps {
+                sh '''
+                mkdir -p reports
 
-stage('Gitleaks Scan') {
-    steps {
-        sh '''
-        mkdir -p reports
+                docker run --rm \
+                  -v "$WORKSPACE":/repo \
+                  -v "$WORKSPACE/reports":/reports \
+                  zricethezav/gitleaks:latest \
+                  detect \
+                  --no-git \
+                  --source=/repo \
+                  --exit-code 1 \
+                  --verbose \
+                  --report-format=json \
+                  --report-path=/reports/gitleaks-report.json
+                '''
 
-        docker run --rm \
-          -v "$WORKSPACE":/repo \
-          -v "$WORKSPACE/reports":/reports \
-          zricethezav/gitleaks:latest \
-          detect \
-          --no-git \
-          --source=/repo \
-          --exit-code 1 \
-          --verbose \
-          --report-format=json \
-          --report-path=/reports/gitleaks-report.json
-        '''
+                archiveArtifacts artifacts: 'reports/gitleaks-report.json', fingerprint: true
+            }
+        }
 
-        archiveArtifacts artifacts: 'reports/gitleaks-report.json', fingerprint: true
-    }
-}
+        stage('Semgrep Scan') {
+            steps {
+                sh '''
+                mkdir -p reports
 
+                docker run --rm \
+                  -v "$WORKSPACE":/src \
+                  -v "$WORKSPACE/reports":/reports \
+                  semgrep/semgrep \
+                  semgrep \
+                  --config=auto \
+                  --json \
+                  --output=/reports/semgrep-report.json \
+                  /src
+                '''
 
-stage('Semgrep Scan') {
-    steps {
-        sh '''
-        mkdir -p reports
+                archiveArtifacts artifacts: 'reports/semgrep-report.json', fingerprint: true
+            }
+        }
 
-        docker run --rm \
-          -v "$WORKSPACE":/src \
-          -v "$WORKSPACE/reports":/reports \
-          semgrep/semgrep \
-          semgrep \
-          --config=auto \
-          --json \
-          --output=/reports/semgrep-report.json \
-          /src
-        '''
-
-        archiveArtifacts artifacts: 'reports/semgrep-report.json', fingerprint: true
-    }
-}
-		
         stage('Build Docker Images') {
             steps {
                 sh "docker build -t student-feedback-backend:${IMAGE_TAG} ./backend"
@@ -73,26 +70,23 @@ stage('Semgrep Scan') {
             }
         }
 
+        stage('Trivy Scan') {
+            steps {
+                sh '''
+                mkdir -p reports
 
-	stage('Trivy Scan') {
-    steps {
-        sh '''
-        mkdir -p reports
+                docker run --rm \
+                  -v /var/run/docker.sock:/var/run/docker.sock \
+                  -v "$WORKSPACE/reports":/reports \
+                  aquasec/trivy image \
+                  --format json \
+                  --output /reports/trivy-report.json \
+                  student-feedback-backend:${IMAGE_TAG}
+                '''
 
-        docker run --rm \
-          -v /var/run/docker.sock:/var/run/docker.sock \
-          -v "$WORKSPACE/reports":/reports \
-          aquasec/trivy image \
-          --format json \
-          --output /reports/trivy-report.json \
-          student-feedback-backend:${IMAGE_TAG}
-        '''
-
-        archiveArtifacts artifacts: 'reports/trivy-report.json', fingerprint: true
-    }
-}
-
-
+                archiveArtifacts artifacts: 'reports/trivy-report.json', fingerprint: true
+            }
+        }
 
         stage('Start Pipeline') {
             steps {
