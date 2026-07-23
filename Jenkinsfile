@@ -67,6 +67,27 @@ stage('Semgrep Scan') {
             }
         }
 
+
+	stage('Trivy Scan') {
+    steps {
+        sh '''
+        mkdir -p reports
+
+        docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v "$WORKSPACE/reports":/reports \
+          aquasec/trivy image \
+          --format json \
+          --output /reports/trivy-report.json \
+          student-feedback-backend:${IMAGE_TAG}
+        '''
+
+        archiveArtifacts artifacts: 'reports/trivy-report.json', fingerprint: true
+    }
+}
+
+
+
         stage('Start Pipeline') {
             steps {
                 echo 'Pipeline Started Successfully!'
