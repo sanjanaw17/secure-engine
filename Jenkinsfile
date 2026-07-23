@@ -7,6 +7,15 @@ pipeline {
 
     stages {
 
+
+		stage('Clean Reports') {
+    steps {
+        sh '''
+        rm -rf reports
+        '''
+    }
+}
+		
         stage('Checkout Code') {
             steps {
                 checkout scm
