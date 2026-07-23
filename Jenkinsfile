@@ -56,27 +56,6 @@ stage('Semgrep Scan') {
         archiveArtifacts artifacts: 'reports/semgrep-report.json', fingerprint: true
     }
 }
-
-
-		stage('Docker Diagnostics') {
-    steps {
-        sh '''
-        echo "=== Docker Version ==="
-        docker version
-
-        echo "=== Docker Images ==="
-        docker images
-
-        echo "=== DNS Test ==="
-        getent hosts auth.docker.io || true
-
-        echo "=== Pull Test ==="
-        docker pull python:3.12-slim
-        '''
-    }
-}
-
-
 		
         stage('Build Docker Images') {
             steps {
