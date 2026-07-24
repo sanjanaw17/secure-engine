@@ -87,6 +87,33 @@ pipeline {
                 archiveArtifacts artifacts: 'reports/trivy-report.json', fingerprint: true
             }
         }
+stage('Push to Docker Hub') {
+    steps {
+        withCredentials([
+            usernamePassword(
+                credentialsId: 'dockerhub',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )
+        ]) {
+            sh '''
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+            docker tag student-feedback-backend:${IMAGE_TAG} \
+                $DOCKER_USER/student-feedback-backend:${IMAGE_TAG}
+
+            docker tag student-feedback-frontend:${IMAGE_TAG} \
+                $DOCKER_USER/student-feedback-frontend:${IMAGE_TAG}
+
+            docker push $DOCKER_USER/student-feedback-backend:${IMAGE_TAG}
+            docker push $DOCKER_USER/student-feedback-frontend:${IMAGE_TAG}
+
+            docker image prune -f
+            '''
+        }
+    }
+}
+
 
         stage('Start Pipeline') {
             steps {
